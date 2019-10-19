@@ -1,77 +1,84 @@
 //
-//  ContentView.swift
+//  ColorGuessingGame.swift
 //  Xcode Experiments
 //
-//  Created by Jason Brain on 9/29/19.
+//  Created by Jason Brain on 10/8/19.
 //  Copyright © 2019 Jason Brain. All rights reserved.
 //
 
 import SwiftUI
 
-private let dateFormatter: DateFormatter = {
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateStyle = .medium
-    dateFormatter.timeStyle = .medium
-    return dateFormatter
-}()
-
 struct ContentView: View {
-    @State private var dates = [Date]()
-
+    @State var r: Double
+    @State var g: Double
+    @State var b: Double
+    @State var showAlert = false
+    
+    func decToHex(value: Double) -> String {
+        return String(format:"%02X", Int(value * 255.0))
+    }
+    
     var body: some View {
         NavigationView {
-            MasterView(dates: $dates)
-                .navigationBarTitle(Text("Master"))
-                .navigationBarItems(
-                    leading: EditButton(),
-                    trailing: Button(
-                        action: {
-                            withAnimation { self.dates.insert(Date(), at: 0) }
+            VStack {
+                HStack {
+                    HStack {
+                        ZStack {
+                            // Color preview border
+                            Rectangle()
+                                .foregroundColor(Color("Border"))
+                                .frame(width: 150, height: 150)
+                                .cornerRadius(32)
+                                .shadow(radius: 1)
+                            
+                            // Color Preview
+                            Rectangle()
+                                .foregroundColor(Color(red: r, green: g, blue: b, opacity: 1.0))
+                                .frame(width: 134, height: 134)
+                                .cornerRadius(24)
                         }
-                    ) {
-                        Image(systemName: "plus")
+                        VStack(alignment: .leading) {
+                            // RGB Value of the color
+                            Text("RGB: \(Int(r * 255.0)), \(Int(g * 255.0)), \(Int(b * 255.0))")
+                            
+                            // Hex Value of the color
+                            Text("Hex: #\(decToHex(value: r))\(decToHex(value: g))\(decToHex(value: b))")
+                        }.padding()
                     }
-                )
-            DetailView()
-        }.navigationViewStyle(DoubleColumnNavigationViewStyle())
-    }
-}
-
-struct MasterView: View {
-    @Binding var dates: [Date]
-
-    var body: some View {
-        List {
-            ForEach(dates, id: \.self) { date in
-                NavigationLink(
-                    destination: DetailView(selectedDate: date)
-                ) {
-                    Text("\(date, formatter: dateFormatter)")
                 }
-            }.onDelete { indices in
-                indices.forEach { self.dates.remove(at: $0) }
+                ColorSlider(value: $r, textColor: .red)
+                ColorSlider(value: $g, textColor: .green)
+                ColorSlider(value: $b, textColor: .blue)
             }
+            .navigationBarTitle(Text("Color Preview"))
+            .navigationBarItems(trailing: Button(action: {
+                self.r = Double.random(in: 0..<1)
+                self.g = Double.random(in: 0..<1)
+                self.b = Double.random(in: 0..<1)
+            }) {
+                Text("Randomize")
+            })
         }
     }
 }
 
-struct DetailView: View {
-    var selectedDate: Date?
-
-    var body: some View {
-        Group {
-            if selectedDate != nil {
-                Text("\(selectedDate!, formatter: dateFormatter)")
-            } else {
-                Text("Detail view content goes here")
-            }
-        }.navigationBarTitle(Text("Detail"))
+struct ColorGuessingGame_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView(r: 0.5, g: 0.5, b: 0.5)
     }
 }
 
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
+struct ColorSlider: View {
+    @Binding var value: Double
+    var textColor: Color
+    var body: some View {
+        HStack {
+            Text("0")
+                .foregroundColor(textColor)
+            Slider(value: $value)
+                .accentColor(textColor)
+            Text("255")
+                .foregroundColor(textColor)
+        }.padding()
     }
 }
